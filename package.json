@@ -8,6 +8,7 @@
   "author": "Emil Djupvik",
   "license": "MIT",
   "dependencies": {
+    "mappa-mundi": "^0.0.5",
     "typescript": "^4.7.4",
     "vector2d": "^3.0.0"
   },

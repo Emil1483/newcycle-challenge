@@ -1,4 +1,19 @@
+const Mappa = require('mappa-mundi');
+
+const mappa = new Mappa('Leaflet');
+
+const options = {
+    lat: 64.96,
+    lng: 16.33,
+    zoom: 5,
+    style: "http://{s}.tile.osm.org/{z}/{x}/{y}.png"
+}
+
+const map = mappa.tileMap(options);
+
 const canvas = document.querySelector('canvas')!
+
+map.overlay(canvas);
 
 const c = canvas.getContext('2d')!
 
@@ -29,8 +44,14 @@ export function pressing(char: string): boolean {
 function draw() {
     requestAnimationFrame(draw)
 
+    const asker = map.latLngToPixel(59.8348696, 10.4366089)
+
+    c.clearRect(0, 0, width, height)
+
+    c.beginPath()
+    c.arc(asker.x, asker.y, 5, 0, Math.PI * 2)
     c.fillStyle = 'black'
-    c.fillRect(0, 0, width, height)
+    c.fill()
 }
 
 draw()
