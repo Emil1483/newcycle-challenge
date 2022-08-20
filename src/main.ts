@@ -1,3 +1,9 @@
+import { CanvasObject } from './canvas_object';
+import { listenToInteractionStream } from "./interaction_stream";
+import { Item, ItemCreation, ItemTransfer, UserCreation } from './interfaces';
+import { ItemObject } from './item';
+import { UserObject } from './user';
+
 const Mappa = require('mappa-mundi');
 
 const mappa = new Mappa('Leaflet');
@@ -6,16 +12,16 @@ const options = {
     lat: 64.96,
     lng: 16.33,
     zoom: 5,
-    style: "http://{s}.tile.osm.org/{z}/{x}/{y}.png"
+    style: 'https://{s}.tile.osm.org/{z}/{x}/{y}.png'
 }
 
-const map = mappa.tileMap(options);
+export const map = mappa.tileMap(options);
 
 const canvas = document.querySelector('canvas')!
 
 map.overlay(canvas);
 
-const c = canvas.getContext('2d')!
+export const context = canvas.getContext('2d')!
 
 canvas.width = innerWidth
 canvas.height = innerHeight
@@ -41,17 +47,58 @@ export function pressing(char: string): boolean {
     return index != -1
 }
 
+const users: UserObject[] = []
+const items: ItemObject[] = []
+
 function draw() {
     requestAnimationFrame(draw)
+    context.clearRect(0, 0, width, height)
 
-    const asker = map.latLngToPixel(59.8348696, 10.4366089)
+    const canvasObjects: CanvasObject[] = [...users, ...items]
 
-    c.clearRect(0, 0, width, height)
-
-    c.beginPath()
-    c.arc(asker.x, asker.y, 5, 0, Math.PI * 2)
-    c.fillStyle = 'black'
-    c.fill()
+    for (const o of canvasObjects) {
+        o.update()
+    }
+    for (const o of canvasObjects) {
+        o.show()
+    }
 }
 
 draw()
+
+function onUserCreation(event: UserCreation) {
+    users.push(new UserObject({
+        items: [],
+        position: event.position,
+        uid: event.uid
+    }))
+}
+
+function onItemCreation(event: ItemCreation) {
+    const item: Item = {id: event.id}
+
+    const userIndex = users.findIndex(u => u.data.uid == event.ownerUid)
+    users[userIndex].addItem(item)
+    items.push(new ItemObject(item, users[userIndex].data.position))
+}
+
+function onItemTransfer(event: ItemTransfer) {
+    const fromUserIndex = users.findIndex(u => u.data.items.map(i => i.id).includes(event.itemId))
+    users[fromUserIndex].removeItem(event.itemId)
+    
+    const toUserIndex = users.findIndex(u => u.data.uid == event.toUid)
+    users[toUserIndex].addItem({id: event.itemId})
+
+    const itemIndex = items.findIndex(i => i.data.id == event.itemId)
+    items[itemIndex].updatePosition(users[toUserIndex].pos)
+}
+
+listenToInteractionStream((event) => {
+    if (event.discriminator == 'UserCreation') {
+        onUserCreation(event)
+    } else if (event.discriminator == 'ItemCreation') {
+        onItemCreation(event)
+    } else if (event.discriminator == 'ItemTransfer') {
+        onItemTransfer(event)
+    }
+})
