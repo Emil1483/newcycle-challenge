@@ -1,50 +1,15 @@
-import { InteractionEvent, ItemCreation, ItemTransfer, UserCreation } from './interfaces';
+import { InteractionEvent } from './interfaces';
 
-function sleep(ms: number) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
+// function sleep(ms: number) {
+//     return new Promise(resolve => setTimeout(resolve, ms));
+// }
+
+// const users: User[] = []
+// const items: Item[] = []
 
 async function* InteractionStream(): AsyncGenerator<InteractionEvent> {
-    yield <UserCreation>{
-        discriminator: 'UserCreation',
-        uid: 'a',
-        position: {
-            lat: 59.8771635,
-            lng: 10.4736327,
-        }
-    }
-    yield <UserCreation>{
-        discriminator: 'UserCreation',
-        uid: 'b',
-        position: {
-            lat: 60.391823,
-            lng: 5.3271424,
-        }
-    }
-    await sleep(2000)
-    yield <ItemCreation>{
-        discriminator: 'ItemCreation',
-        id: 'x',
-        ownerUid: 'a',
-    }
-    await sleep(2000)
-    yield <ItemTransfer>{
-        discriminator: 'ItemTransfer',
-        itemId: 'x',
-        toUid: 'b',
-    }
-    await sleep(2000)
-    yield <ItemTransfer>{
-        discriminator: 'ItemTransfer',
-        itemId: 'x',
-        toUid: 'a',
-    }
-    await sleep(2000)
-    yield <ItemTransfer>{
-        discriminator: 'ItemTransfer',
-        itemId: 'x',
-        toUid: 'b',
-    }
+    const response = await fetch('src/places.json')
+    console.log(await response.json())
 }
 
 export async function listenToInteractionStream(callback: (event: InteractionEvent) => void) {
