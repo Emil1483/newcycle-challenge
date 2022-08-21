@@ -1,6 +1,6 @@
 import { CanvasObject } from './canvas_object';
 import { listenToInteractionStream } from "./interaction_stream";
-import { Item, ItemCreation, ItemTransfer, UserCreation } from './interfaces';
+import { ItemCreation, ItemTransfer, UserCreation } from './interfaces';
 import { ItemObject } from './item';
 import { UserObject } from './user';
 
@@ -75,11 +75,13 @@ function onUserCreation(event: UserCreation) {
 }
 
 function onItemCreation(event: ItemCreation) {
-    const item: Item = {id: event.id}
-
     const userIndex = users.findIndex(u => u.data.uid == event.ownerUid)
-    users[userIndex].addItem(item)
-    items.push(new ItemObject(item, users[userIndex].data.position))
+    if (userIndex == -1) {
+        throw new Error(`Could not find user with uid ${event.ownerUid}`)
+    }
+
+    users[userIndex].addItem(event.item)
+    items.push(new ItemObject(event.item, users[userIndex].data.position))
 }
 
 function onItemTransfer(event: ItemTransfer) {

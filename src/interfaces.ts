@@ -22,7 +22,7 @@ export interface UserCreation {
 export interface ItemCreation {
     discriminator: 'ItemCreation'
     ownerUid: string
-    id: string
+    item: Item
 }
 
 export interface ItemTransfer {
