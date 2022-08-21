@@ -1,6 +1,7 @@
-import { AbstractVector, Vector } from "vector2d";
+import { AbstractVector } from "vector2d";
 import { CanvasObject } from "./canvas_object";
-import { Item, Position } from "./interfaces";
+import { vectorWithRandomOffsetFrom } from "./helpers";
+import { Item, User } from "./interfaces";
 import { context } from './main';
 
 export class ItemObject extends CanvasObject {
@@ -10,8 +11,8 @@ export class ItemObject extends CanvasObject {
     a = 0
     animating = false
 
-    constructor(public data: Item, position: Position) {
-        super(new Vector(position.lat, position.lng))
+    constructor(public data: Item, private owner: User) {
+        super(vectorWithRandomOffsetFrom(owner.position, 0.08))
         this.desiredPos = this.pos.clone()
         this.prevPos = this.pos.clone()
     }
@@ -32,13 +33,14 @@ export class ItemObject extends CanvasObject {
 
     show(): void {
         context.beginPath()
-        context.arc(this.mapPos().x, this.mapPos().y, 5, 0, Math.PI * 2)
-        context.fillStyle = 'black'
+        context.arc(this.mapPos().x, this.mapPos().y, 2, 0, Math.PI * 2)
+        context.fillStyle = 'rgba(0, 0, 0, 0.75)'
         context.fill()
     }
 
-    updatePosition(newPosition: AbstractVector) {
-        this.desiredPos = newPosition.clone()
+    updateOwner(newOwner: User) {
+        this.owner = newOwner
+        this.desiredPos = vectorWithRandomOffsetFrom(this.owner.position, 0.08)
         this.prevPos = this.pos.clone()
         this.animating = true
         this.a = 0

@@ -1,7 +1,15 @@
-import { chooseRandomlyBetween, randomElementIn, sleep } from './helpers';
+import { chooseRandomlyBetween, randomElementIn, sleep, vectorFrom } from './helpers';
 import { InteractionEvent, Item, ItemCreation, ItemTransfer, Position, User, UserCreation } from './interfaces';
 
 const users: User[] = []
+
+function itemsCount(): number {
+    let itemsCount = 0
+    for (const user of users) {
+        itemsCount += user.items.length
+    }
+    return itemsCount
+}
 
 async function buildUserCreationEvent(): Promise<UserCreation> {
     const positions = await fetch('src/positions_in_norway.json').then(r => r.json())
@@ -23,15 +31,14 @@ async function buildUserCreationEvent(): Promise<UserCreation> {
 }
 
 async function buildItemCreationEvent(): Promise<ItemCreation> {
-    const owner = randomElementIn(users)
-    
-    let numItems = 0
-    for (const user of users) {
-        numItems += user.items.length
+    if (users.length == 0) {
+        throw new Error('There must be at least one user in order to add an item')
     }
 
+    const owner = randomElementIn(users)
+
     const item: Item = {
-        id: numItems.toString(),
+        id: itemsCount().toString(),
     }
 
     owner.items.push(item)
@@ -44,12 +51,30 @@ async function buildItemCreationEvent(): Promise<ItemCreation> {
 }
 
 async function buildItemTransferEvent(): Promise<ItemTransfer> {
-    const usersWithItems = users.filter(u => u.items.length > 0)
-    const fromUser = randomElementIn(usersWithItems)
-    const toUser = randomElementIn(users)
+    if (users.length < 2) {
+        throw new Error('We need at least 2 users in order to transfer an item')
+    }
 
-    const itemToTransfer = fromUser.items.splice(0)[0]
+    const usersWithItems = users.filter(u => u.items.length > 0)
+
+    if (usersWithItems.length == 0) {
+        throw new Error('There are no items to transfer')
+    }
+
+    const fromUser = randomElementIn(usersWithItems)
+
+    const toUser = chooseRandomlyBetween(users.filter(u => u.uid != fromUser.uid).map(u => {
+        const distance = 5 * vectorFrom(u.position).distance(vectorFrom(fromUser.position))
+        const clampedDistance = Math.max(1, distance)
+        return {
+            probability: 1 / Math.pow(clampedDistance, 2),
+            value: u
+        }
+    }))
+
+    const itemToTransfer = fromUser.items.splice(0, 1)[0]
     toUser.items.push(itemToTransfer)
+
     return {
         discriminator: 'ItemTransfer',
         itemId: itemToTransfer.id,
@@ -57,25 +82,30 @@ async function buildItemTransferEvent(): Promise<ItemTransfer> {
     }
 }
 
-async function* InteractionStream(): AsyncGenerator<InteractionEvent> {
-    yield await buildUserCreationEvent()
-    await sleep(1000)
-    yield await buildItemCreationEvent()
-    await sleep(1000)
+async function* interactionStream(): AsyncGenerator<InteractionEvent> {
+    const maxUsers = 500
+    const maxItems = maxUsers * 4
 
+    yield await buildUserCreationEvent()
+    yield await buildUserCreationEvent()
     while (true) {
-        await sleep(1000)
+        const userCountDot = 2 * users.length * (1 - users.length / maxUsers)
+        const itemCountDot = 2.5 * users.length * (1 - itemsCount() / maxItems)
+        const itemTransferCountDot = 0.01 * itemsCount()
+
+        await sleep(1000 / (userCountDot + itemCountDot + itemTransferCountDot))
+
         const buildEvent = chooseRandomlyBetween<() => Promise<InteractionEvent>>([
             {
-                probability: 1,
+                probability: userCountDot,
                 value: buildUserCreationEvent
             },
             {
-                probability: 1,
+                probability: itemCountDot,
                 value: buildItemCreationEvent
             },
             {
-                probability: 1,
+                probability: itemTransferCountDot,
                 value: buildItemTransferEvent
             },
         ])
@@ -84,7 +114,7 @@ async function* InteractionStream(): AsyncGenerator<InteractionEvent> {
 }
 
 export async function listenToInteractionStream(callback: (event: InteractionEvent) => void) {
-    for await (const val of InteractionStream()) {
+    for await (const val of interactionStream()) {
         callback(val)
     }
 }

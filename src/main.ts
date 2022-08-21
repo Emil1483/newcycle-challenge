@@ -81,18 +81,22 @@ function onItemCreation(event: ItemCreation) {
     }
 
     users[userIndex].addItem(event.item)
-    items.push(new ItemObject(event.item, users[userIndex].data.position))
+    items.push(new ItemObject(event.item, users[userIndex].data))
 }
 
 function onItemTransfer(event: ItemTransfer) {
     const fromUserIndex = users.findIndex(u => u.data.items.map(i => i.id).includes(event.itemId))
-    users[fromUserIndex].removeItem(event.itemId)
-    
     const toUserIndex = users.findIndex(u => u.data.uid == event.toUid)
+
+    if (fromUserIndex == toUserIndex) {
+        throw new Error('Do not transfer item to its owner')
+    }
+    
+    users[fromUserIndex].removeItem(event.itemId)
     users[toUserIndex].addItem({id: event.itemId})
 
     const itemIndex = items.findIndex(i => i.data.id == event.itemId)
-    items[itemIndex].updatePosition(users[toUserIndex].pos)
+    items[itemIndex].updateOwner(users[toUserIndex].data)
 }
 
 listenToInteractionStream((event) => {

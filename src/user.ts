@@ -12,9 +12,9 @@ export class UserObject extends CanvasObject {
     
     show(): void {
         context.beginPath()
-        context.arc(this.mapPos().x, this.mapPos().y, 5, 0, Math.PI * 2)
+        context.arc(this.mapPos().x, this.mapPos().y, 4, 0, Math.PI * 2)
         context.strokeStyle = 'black'
-        context.lineWidth = 2
+        context.lineWidth = 0.5
         context.stroke()
     }
 
