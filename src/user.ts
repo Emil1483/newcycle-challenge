@@ -6,8 +6,8 @@ export class UserMeshWrapper extends MeshWrapper {
     constructor(public data: User) {
         super(
             new THREE.Mesh(
-                new THREE.TorusGeometry(0.1, 0.02, 16, 100),
-                new THREE.MeshLambertMaterial({ color: 0xff0000, side: 2 }),
+                new THREE.BoxGeometry(0.075, 0.075, 0.01),
+                new THREE.MeshLambertMaterial({ color: 0xff8181, side: 2 }),
             ),
             new THREE.Vector3(data.position.lat, data.position.lng),
         )

@@ -1,5 +1,5 @@
-import { chooseRandomlyBetween, randomElementIn, sleep, vectorFrom } from './helpers';
-import { InteractionEvent, Item, ItemCreation, ItemTransfer, Position, User, UserCreation } from './interfaces';
+import { chooseRandomlyBetween, randomElementIn, sleep, vectorFrom } from './helpers'
+import { InteractionEvent, Item, ItemCreation, ItemTransfer, Position, User, UserCreation } from './interfaces'
 
 const users: User[] = []
 
@@ -83,7 +83,7 @@ async function buildItemTransferEvent(): Promise<ItemTransfer> {
 }
 
 async function* interactionStream(): AsyncGenerator<InteractionEvent> {
-    const maxUsers = 50
+    const maxUsers = 500
     const maxItems = maxUsers * 4
 
     yield await buildUserCreationEvent()

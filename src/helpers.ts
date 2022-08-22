@@ -1,6 +1,6 @@
-import * as THREE from 'three';
-import { Vector } from "vector2d";
-import { Position } from "./interfaces";
+import * as THREE from 'three'
+import { Vector } from "vector2d"
+import { Position } from "./interfaces"
 
 export function chooseRandomlyBetween<T>(
     functions: {
@@ -25,7 +25,7 @@ export function randomElementIn<T>(list: T[]): T {
 }
 
 export function sleep(ms: number) {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise(resolve => setTimeout(resolve, ms))
 }
 
 export function vectorWithRandomOffsetFrom(position: Position, r: number) {
@@ -37,4 +37,11 @@ export function vectorWithRandomOffsetFrom(position: Position, r: number) {
 
 export function vectorFrom(position: Position) {
     return new Vector(position.lat, position.lng)
+}
+
+export function easeOutBackCurve(x: number): number {
+    const c1 = 1.70158;
+    const c3 = c1 + 1;
+
+    return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2);
 }
