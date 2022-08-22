@@ -100,8 +100,6 @@ async function* interactionStream(): AsyncGenerator<InteractionEvent> {
 
         const timeToWait = 1000 / (userCountDot + itemCountDot + itemTransferCountDot)
 
-        
-
         await sleep(timeToWait * 100 / [1, 30.5, 365][playbackSpeed])
         currentTime += timeToWait * 5_000_000
 
