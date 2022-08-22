@@ -1,23 +1,42 @@
-import { AbstractVector } from "vector2d";
-import { CanvasObject } from "./canvas_object";
+import * as THREE from 'three';
 import { vectorWithRandomOffsetFrom } from "./helpers";
 import { Item, User } from "./interfaces";
-import { context } from './main';
+import { MeshWrapper } from "./mesh_wrapper";
 
-export class ItemObject extends CanvasObject {
+export class ItemMeshWrapper extends MeshWrapper {
     timeToTransfer = 2
-    desiredPos: AbstractVector
-    prevPos: AbstractVector
+    desiredPos: THREE.Vector3
+    prevPos: THREE.Vector3
     a = 0
     animating = false
 
+    t = 0
+
     constructor(public data: Item, private owner: User) {
-        super(vectorWithRandomOffsetFrom(owner.position, 0.08))
+        super(
+            new THREE.Mesh(
+                new THREE.SphereGeometry(0.05),
+                new THREE.MeshLambertMaterial({ color: 0xff0000, side: 2 }),
+            ),
+            vectorWithRandomOffsetFrom(owner.position, 0.08),
+        )
+
         this.desiredPos = this.pos.clone()
         this.prevPos = this.pos.clone()
     }
 
+    updateOwner(newOwner: User) {
+        this.owner = newOwner
+        this.desiredPos = vectorWithRandomOffsetFrom(this.owner.position, 0.08)
+        this.prevPos = this.pos.clone()
+        this.animating = true
+        this.a = 0
+    }
+
     update(): void {
+        this.t += 0.02
+        this.pos.z += Math.sin(this.t) * 0.15
+
         if (!this.animating) return
 
         this.a += 1 / (60 * this.timeToTransfer)
@@ -27,22 +46,8 @@ export class ItemObject extends CanvasObject {
             return
         }
 
-        const diff = this.desiredPos.clone().subtract(this.prevPos)
-        this.pos = this.prevPos.clone().add(diff.multiplyByScalar(this.a))
-    }
-
-    show(): void {
-        context.beginPath()
-        context.arc(this.mapPos().x, this.mapPos().y, 2, 0, Math.PI * 2)
-        context.fillStyle = 'rgba(0, 0, 0, 0.75)'
-        context.fill()
-    }
-
-    updateOwner(newOwner: User) {
-        this.owner = newOwner
-        this.desiredPos = vectorWithRandomOffsetFrom(this.owner.position, 0.08)
-        this.prevPos = this.pos.clone()
-        this.animating = true
-        this.a = 0
+        const diff = this.desiredPos.clone().sub(this.prevPos)
+        this.pos = this.prevPos.clone().add(diff.multiplyScalar(this.a))
+        this.pos.z = Math.sin(this.a * Math.PI) * 15
     }
 }

@@ -1,110 +1,101 @@
-import { CanvasObject } from './canvas_object';
-import { listenToInteractionStream } from "./interaction_stream";
+import * as THREE from 'three';
+import { listenToInteractionStream } from './interaction_stream';
 import { ItemCreation, ItemTransfer, UserCreation } from './interfaces';
-import { ItemObject } from './item';
-import { UserObject } from './user';
+import { ItemMeshWrapper } from './item';
+import { MeshWrapper } from './mesh_wrapper';
+import { UserMeshWrapper } from './user';
 
 const Mappa = require('mappa-mundi');
 
-const mappa = new Mappa('Leaflet');
+const users: UserMeshWrapper[] = []
+const items: ItemMeshWrapper[] = []
+
+function allMeshWrappers(): MeshWrapper[] {
+  return [...users, ...items]
+}
+
+export const WIDTH = innerWidth;
+export const HEIGHT = innerHeight;
+const VIEW_ANGLE = 45;
+const ASPECT = WIDTH / HEIGHT;
+const NEAR = 0.1;
+const FAR = 10000;
+
+export const scene = new THREE.Scene();
+export const camera = new THREE.PerspectiveCamera(VIEW_ANGLE, ASPECT, NEAR, FAR);
+const canvas = document.querySelector('canvas')!
+const renderer = new THREE.WebGLRenderer({ alpha: true, canvas: canvas });
+
+camera.position.z = 300;
+scene.add(camera);
+renderer.setSize(WIDTH, HEIGHT);
+
+const light = new THREE.PointLight(0xffffff, 1.2);
+light.position.set(0, 0, 200);
+scene.add(light);
 
 const options = {
-    lat: 64.96,
-    lng: 16.33,
-    zoom: 5,
-    style: 'https://{s}.tile.osm.org/{z}/{x}/{y}.png'
+  lat: 64.96,
+  lng: 15.93,
+  zoom: 4.5,
+  pitch: VIEW_ANGLE,
 }
 
-export const map = mappa.tileMap(options);
-
-const canvas = document.querySelector('canvas')!
-
-map.overlay(canvas);
-
-export const context = canvas.getContext('2d')!
-
-canvas.width = innerWidth
-canvas.height = innerHeight
-
-export const width = canvas.width
-export const height = canvas.height
-
-const keysPressed: Array<string> = []
-
-addEventListener('keydown', (event) => {
-    const index = keysPressed.indexOf(event.key)
-    if (index == -1) {
-        keysPressed.push(event.key)
-    }
-})
-addEventListener('keyup', (event) => {
-    const index = keysPressed.indexOf(event.key)
-    keysPressed.splice(index, 1)
-})
-
-export function pressing(char: string): boolean {
-    const index = keysPressed.map((c) => c.toLowerCase()).indexOf(char)
-    return index != -1
-}
-
-const users: UserObject[] = []
-const items: ItemObject[] = []
+const mappa = new Mappa('MapboxGL', process.env.MAPBOX_KEY)
+export const map = mappa.tileMap(options)
+map.overlay(canvas)
 
 function draw() {
-    requestAnimationFrame(draw)
-    context.clearRect(0, 0, width, height)
+  requestAnimationFrame(draw);
 
-    const canvasObjects: CanvasObject[] = [...users, ...items]
+  allMeshWrappers().forEach(m => m.update())
 
-    for (const o of canvasObjects) {
-        o.update()
-    }
-    for (const o of canvasObjects) {
-        o.show()
-    }
-}
+  allMeshWrappers().forEach(m => m.show())
+
+  renderer.render(scene, camera);
+};
 
 draw()
 
 function onUserCreation(event: UserCreation) {
-    users.push(new UserObject({
-        items: [],
-        position: event.position,
-        uid: event.uid
-    }))
+  users.push(new UserMeshWrapper({
+    items: [],
+    position: event.position,
+    uid: event.uid
+  }))
 }
 
 function onItemCreation(event: ItemCreation) {
-    const userIndex = users.findIndex(u => u.data.uid == event.ownerUid)
-    if (userIndex == -1) {
-        throw new Error(`Could not find user with uid ${event.ownerUid}`)
-    }
+  const userIndex = users.findIndex(u => u.data.uid == event.ownerUid)
+  if (userIndex == -1) {
+      throw new Error(`Could not find user with uid ${event.ownerUid}`)
+  }
 
-    users[userIndex].addItem(event.item)
-    items.push(new ItemObject(event.item, users[userIndex].data))
+  users[userIndex].addItem(event.item)
+  items.push(new ItemMeshWrapper(event.item, users[userIndex].data))
 }
 
 function onItemTransfer(event: ItemTransfer) {
-    const fromUserIndex = users.findIndex(u => u.data.items.map(i => i.id).includes(event.itemId))
-    const toUserIndex = users.findIndex(u => u.data.uid == event.toUid)
+  const fromUserIndex = users.findIndex(u => u.data.items.map(i => i.id).includes(event.itemId))
+  const toUserIndex = users.findIndex(u => u.data.uid == event.toUid)
 
-    if (fromUserIndex == toUserIndex) {
-        throw new Error('Do not transfer item to its owner')
-    }
-    
-    users[fromUserIndex].removeItem(event.itemId)
-    users[toUserIndex].addItem({id: event.itemId})
+  if (fromUserIndex == toUserIndex) {
+      throw new Error('Do not transfer item to its owner')
+  }
 
-    const itemIndex = items.findIndex(i => i.data.id == event.itemId)
-    items[itemIndex].updateOwner(users[toUserIndex].data)
+  users[fromUserIndex].removeItem(event.itemId)
+  users[toUserIndex].addItem({ id: event.itemId })
+
+  const itemIndex = items.findIndex(i => i.data.id == event.itemId)
+  items[itemIndex].updateOwner(users[toUserIndex].data)
 }
 
 listenToInteractionStream((event) => {
-    if (event.discriminator == 'UserCreation') {
-        onUserCreation(event)
-    } else if (event.discriminator == 'ItemCreation') {
-        onItemCreation(event)
-    } else if (event.discriminator == 'ItemTransfer') {
-        onItemTransfer(event)
-    }
+  if (event.discriminator == 'UserCreation') {
+      onUserCreation(event)
+  } else if (event.discriminator == 'ItemCreation') {
+      onItemCreation(event)
+  } else if (event.discriminator == 'ItemTransfer') {
+      onItemTransfer(event)
+  }
 })

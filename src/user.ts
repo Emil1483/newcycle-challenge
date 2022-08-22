@@ -1,22 +1,19 @@
-import { Vector } from "vector2d";
-import { CanvasObject } from "./canvas_object";
+import * as THREE from 'three';
 import { Item, User } from "./interfaces";
-import { context } from "./main";
+import { MeshWrapper } from "./mesh_wrapper";
 
-export class UserObject extends CanvasObject {
+export class UserMeshWrapper extends MeshWrapper {
     constructor(public data: User) {
-        super(new Vector(data.position.lat, data.position.lng))
+        super(
+            new THREE.Mesh(
+                new THREE.TorusGeometry(0.1, 0.02, 16, 100),
+                new THREE.MeshLambertMaterial({ color: 0xff0000, side: 2 }),
+            ),
+            new THREE.Vector3(data.position.lat, data.position.lng),
+        )
     }
 
-    update(): void {}
-    
-    show(): void {
-        context.beginPath()
-        context.arc(this.mapPos().x, this.mapPos().y, 4, 0, Math.PI * 2)
-        context.strokeStyle = 'black'
-        context.lineWidth = 0.5
-        context.stroke()
-    }
+    update(): void { }
 
     addItem(item: Item) {
         this.data.items.push(item)

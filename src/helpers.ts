@@ -1,5 +1,6 @@
-import { Vector } from "vector2d"
-import { Position } from "./interfaces"
+import * as THREE from 'three';
+import { Vector } from "vector2d";
+import { Position } from "./interfaces";
 
 export function chooseRandomlyBetween<T>(
     functions: {
@@ -28,7 +29,7 @@ export function sleep(ms: number) {
 }
 
 export function vectorWithRandomOffsetFrom(position: Position, r: number) {
-    return new Vector(
+    return new THREE.Vector3(
         position.lat + Math.random() * r * 2 - r,
         position.lng + Math.random() * r - r / 2,
     )

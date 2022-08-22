@@ -83,7 +83,7 @@ async function buildItemTransferEvent(): Promise<ItemTransfer> {
 }
 
 async function* interactionStream(): AsyncGenerator<InteractionEvent> {
-    const maxUsers = 500
+    const maxUsers = 50
     const maxItems = maxUsers * 4
 
     yield await buildUserCreationEvent()
