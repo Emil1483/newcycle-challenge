@@ -1,4 +1,51 @@
+@import url("https://use.typekit.net/jmk3xov.css");
+
 body {
     margin: 0;
-    background: black;
+}
+
+canvas {
+  position: fixed;
+  margin: 0;
+}
+
+:root {
+  --dark-bg: rgba(15, 15, 15, 0.95);
+  --spacing: 350px;
+
+  font-family: Roboto, sans-serif;
+  font-weight: 400;
+  font-style: normal;
+}
+
+main {
+  width: 100vw;
+  color: white;
+  z-index: 99;
+  position: absolute;
+  width: 100%;
+  margin: 0px auto;
+
+  display: grid;
+  /* grid-template-columns: repeat(12, 1fr); */
+  position: absolute;
+  bottom: 0px;
+}
+
+canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+}
+
+header {
+    background: var(--dark-bg);
+    font-size: 1.5rem;
+    padding: 0 2.5rem;
+    width: fit-content;
+}
+
+.slider {
+    margin-top: 32px;
+    width: 100%;
 }

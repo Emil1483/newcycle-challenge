@@ -1,7 +1,9 @@
-import { chooseRandomlyBetween, randomElementIn, sleep, vectorFrom } from './helpers'
-import { InteractionEvent, Item, ItemCreation, ItemTransfer, Position, User, UserCreation } from './interfaces'
+import { chooseRandomlyBetween, randomElementIn, sleep, vectorFrom } from './helpers';
+import { InteractionEvent, Item, ItemCreation, ItemTransfer, Position, User, UserCreation } from './interfaces';
+import { playbackSpeed } from './main';
 
 const users: User[] = []
+let currentTime = 1600000000000
 
 function itemsCount(): number {
     let itemsCount = 0
@@ -25,6 +27,7 @@ async function buildUserCreationEvent(): Promise<UserCreation> {
 
     return <UserCreation>{
         discriminator: 'UserCreation',
+        happenedAt: currentTime,
         uid: newUser.uid,
         position: newUser.position,
     }
@@ -45,6 +48,7 @@ async function buildItemCreationEvent(): Promise<ItemCreation> {
 
     return <ItemCreation>{
         discriminator: 'ItemCreation',
+        happenedAt: currentTime,
         item: item,
         ownerUid: owner.uid
     }
@@ -77,6 +81,7 @@ async function buildItemTransferEvent(): Promise<ItemTransfer> {
 
     return {
         discriminator: 'ItemTransfer',
+        happenedAt: currentTime,
         itemId: itemToTransfer.id,
         toUid: toUser.uid,
     }
@@ -93,7 +98,12 @@ async function* interactionStream(): AsyncGenerator<InteractionEvent> {
         const itemCountDot = 2.5 * users.length * (1 - itemsCount() / maxItems)
         const itemTransferCountDot = 0.01 * itemsCount()
 
-        await sleep(1000 / (userCountDot + itemCountDot + itemTransferCountDot))
+        const timeToWait = 1000 / (userCountDot + itemCountDot + itemTransferCountDot)
+
+        
+
+        await sleep(timeToWait * 100 / [1, 30.5, 365][playbackSpeed])
+        currentTime += timeToWait * 5_000_000
 
         const buildEvent = chooseRandomlyBetween<() => Promise<InteractionEvent>>([
             {

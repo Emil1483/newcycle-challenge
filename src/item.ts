@@ -4,7 +4,8 @@ import { Item, User } from "./interfaces"
 import { MeshWrapper } from "./mesh_wrapper"
 
 export class ItemMeshWrapper extends MeshWrapper {
-    timeToTransfer = 5
+    timeToTransfer = 3
+
     desiredPos: THREE.Vector3
     prevPos: THREE.Vector3
     a = 0

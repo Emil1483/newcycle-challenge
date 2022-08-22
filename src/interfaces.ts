@@ -15,18 +15,21 @@ export interface Item {
 
 export interface UserCreation {
     discriminator: 'UserCreation'
+    happenedAt: number
     uid: string
     position: Position
 }
 
 export interface ItemCreation {
     discriminator: 'ItemCreation'
+    happenedAt: number
     ownerUid: string
     item: Item
 }
 
 export interface ItemTransfer {
     discriminator: 'ItemTransfer'
+    happenedAt: number
     itemId: string
     toUid: string
 }

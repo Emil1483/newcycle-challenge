@@ -7,6 +7,11 @@ import { UserMeshWrapper } from './user'
 
 const Mappa = require('mappa-mundi')
 
+const dateElement = document.querySelector('#date')!
+var slider = document.querySelector("#slider")! as HTMLInputElement
+
+export let playbackSpeed = parseInt(slider.value)
+
 const users: UserMeshWrapper[] = []
 const items: ItemMeshWrapper[] = []
 
@@ -68,7 +73,7 @@ function onUserCreation(event: UserCreation) {
 function onItemCreation(event: ItemCreation) {
   const userIndex = users.findIndex(u => u.data.uid == event.ownerUid)
   if (userIndex == -1) {
-      throw new Error(`Could not find user with uid ${event.ownerUid}`)
+    throw new Error(`Could not find user with uid ${event.ownerUid}`)
   }
 
   users[userIndex].addItem(event.item)
@@ -80,7 +85,7 @@ function onItemTransfer(event: ItemTransfer) {
   const toUserIndex = users.findIndex(u => u.data.uid == event.toUid)
 
   if (fromUserIndex == toUserIndex) {
-      throw new Error('Do not transfer item to its owner')
+    throw new Error('Do not transfer item to its owner')
   }
 
   users[fromUserIndex].removeItem(event.itemId)
@@ -89,13 +94,22 @@ function onItemTransfer(event: ItemTransfer) {
   const itemIndex = items.findIndex(i => i.data.id == event.itemId)
   items[itemIndex].updateOwner(users[toUserIndex].data)
 }
+slider.oninput = () => {
+  playbackSpeed = parseInt(slider.value)
+}
 
 listenToInteractionStream((event) => {
+  const date = new Date(event.happenedAt)
+  dateElement.textContent = date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  })
   if (event.discriminator == 'UserCreation') {
-      onUserCreation(event)
+    onUserCreation(event)
   } else if (event.discriminator == 'ItemCreation') {
-      onItemCreation(event)
+    onItemCreation(event)
   } else if (event.discriminator == 'ItemTransfer') {
-      onItemTransfer(event)
+    onItemTransfer(event)
   }
 })
