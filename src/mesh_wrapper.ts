@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { easeOutBackCurve } from './helpers';
-import { camera, HEIGHT, map, scene, WIDTH } from './main';
+import { camera, HEIGHT, map, scene, WIDTH } from './map';
 
 export abstract class MeshWrapper {
     animateInValue = 0
